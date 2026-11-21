@@ -16,19 +16,17 @@ import java.util.UUID;
 @Service
 public class LinkEntityService {
     private final LinkEntityRepository linkEntityRepository;
-    private final UUID uuid;
 
     @Autowired
     public LinkEntityService(LinkEntityRepository linkEntityRepository) {
         this.linkEntityRepository = linkEntityRepository;
-        this.uuid = UUID.randomUUID();
     }
 
     public ResponseLinkEntity createLinkShortened(RequestLinkEntity requestLinkEntity) {
         if(linkEntityRepository.findByUserLink(requestLinkEntity.userLink()).isPresent()) {
             throw new LinkAlreadyRegisteredException("Link Already Registered");
         }
-        String shortenedLink = uuid.toString();
+        String shortenedLink = UUID.randomUUID().toString();
 
         LinkEntity linkEntity = new LinkEntity();
         linkEntity.setUserLink(requestLinkEntity.userLink());
@@ -40,11 +38,11 @@ public class LinkEntityService {
     }
 
     public String redirectBrowser(String shortenedLink) {
-        if(linkEntityRepository.findByShortenedLink(shortenedLink).isEmpty()) {
+        Optional<LinkEntity> linkEntity = linkEntityRepository.findByShortenedLink(shortenedLink);
+
+        if(linkEntity.isEmpty()) {
             throw new InvalidLinkException("Invalid Link");
         }
-
-        Optional<LinkEntity> linkEntity = linkEntityRepository.findByShortenedLink(shortenedLink);
 
         return linkEntity.get().getUserLink();
     }

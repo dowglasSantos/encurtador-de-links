@@ -7,7 +7,6 @@ import com.app.exception.InvalidLinkException;
 import com.app.exception.LinkAlreadyRegisteredException;
 import com.app.repository.LinkEntityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -23,27 +22,21 @@ public class LinkEntityService {
     }
 
     public ResponseLinkEntity createLinkShortened(RequestLinkEntity requestLinkEntity) {
-        if(linkEntityRepository.findByUserLink(requestLinkEntity.userLink()).isPresent()) {
-            throw new LinkAlreadyRegisteredException("Link Already Registered");
-        }
+        LinkEntity entity = linkEntityRepository.findByUserLink(requestLinkEntity.userLink()).orElseThrow(() -> new LinkAlreadyRegisteredException("Link Already Registered"));
+
         String shortenedLink = UUID.randomUUID().toString();
 
-        LinkEntity linkEntity = new LinkEntity();
-        linkEntity.setUserLink(requestLinkEntity.userLink());
-        linkEntity.setShortenedLink(shortenedLink);
+        entity.setUserLink(requestLinkEntity.userLink());
+        entity.setShortenedLink(shortenedLink);
 
-        linkEntityRepository.save(linkEntity);
+        linkEntityRepository.save(entity);
 
         return new ResponseLinkEntity(shortenedLink);
     }
 
     public String redirectBrowser(String shortenedLink) {
-        Optional<LinkEntity> linkEntity = linkEntityRepository.findByShortenedLink(shortenedLink);
+        LinkEntity linkEntity = linkEntityRepository.findByShortenedLink(shortenedLink).orElseThrow(() -> new InvalidLinkException("Invalid Link"));
 
-        if(linkEntity.isEmpty()) {
-            throw new InvalidLinkException("Invalid Link");
-        }
-
-        return linkEntity.get().getUserLink();
+        return linkEntity.getUserLink();
     }
 }

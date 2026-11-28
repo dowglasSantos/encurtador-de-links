@@ -21,6 +21,6 @@ public class LinkEntity {
     @Column(name = "userLink", nullable = false)
     private String userLink;
 
-    @Column(name = "shortenedLink", nullable = false)
+    @Column(name = "shortenedLink", nullable = false, unique = true)
     private String shortenedLink;
 }

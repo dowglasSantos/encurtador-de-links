@@ -9,6 +9,7 @@ import com.app.repository.LinkEntityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.swing.text.html.Option;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,16 +23,16 @@ public class LinkEntityService {
     }
 
     public ResponseLinkEntity createLinkShortened(RequestLinkEntity requestLinkEntity) {
-        LinkEntity entity = linkEntityRepository.findByUserLink(requestLinkEntity.userLink()).orElseThrow(() -> new LinkAlreadyRegisteredException("Link Already Registered"));
+        if(linkEntityRepository.findByUserLink(requestLinkEntity.userLink()).isPresent()) {
+            throw new LinkAlreadyRegisteredException("Link already registered");
+        }
 
-        String shortenedLink = UUID.randomUUID().toString();
+        LinkEntity linkEntity = new LinkEntity();
+        linkEntity.setUserLink(requestLinkEntity.userLink());
+        linkEntity.setShortenedLink(UUID.randomUUID().toString());
 
-        entity.setUserLink(requestLinkEntity.userLink());
-        entity.setShortenedLink(shortenedLink);
-
-        linkEntityRepository.save(entity);
-
-        return new ResponseLinkEntity(shortenedLink);
+        linkEntityRepository.save(linkEntity);
+        return new ResponseLinkEntity(linkEntity.getShortenedLink());
     }
 
     public String redirectBrowser(String shortenedLink) {
